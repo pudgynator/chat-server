@@ -1,6 +1,6 @@
 import express from "express";
 import cors from 'cors';
-import router from "./routes/authRoute.js";
+import router from "./routes/index.js";
 
 const corsOptions = {
     origin: ['http://localhost:5173'],
