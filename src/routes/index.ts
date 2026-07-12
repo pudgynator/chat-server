@@ -1,10 +1,8 @@
 import express from 'express';
 const router = express.Router();
 
-import registerRouter from './registerRoute.js';
-import loginRouter from './loginRoute.js';
+import authRouter from './authRoute.js';
 
-router.use('/api/register', registerRouter);
-router.use('/api/login', loginRouter);
+router.use('/', authRouter);
 
 export default router;
