@@ -22,7 +22,7 @@ export const loginUser = async (req: Request, res: Response) => {
 
         const token = jwt.sign(
             {
-                id: user._id.toString(),
+                userId: user._id.toString(),
             },
             process.env.JWT_SECRET! as string,
             {

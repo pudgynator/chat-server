@@ -1,8 +1,9 @@
 import type {  Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import type { JwtPayload } from "../types/auth.js";
+import User from "../models/User.js";
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
 
     if(!authHeader) {
@@ -22,6 +23,10 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction) 
         ) as JwtPayload;
 
         req.user = decoded;
+        await User.findByIdAndUpdate(decoded.userId, {
+            lastSeen: new Date(),
+        })
+
         next();
     } catch (error) {
         return res.status(401).json({
