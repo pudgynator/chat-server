@@ -2,6 +2,12 @@ import type { Request, Response } from "express";
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 
+type PopulatedUser = {
+    _id: string;
+    name: string;
+    phone: string;
+};
+
 export const getChats = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.userId;
@@ -14,7 +20,19 @@ export const getChats = async (req: Request, res: Response) => {
             members: userId,
         }).populate('members', 'name phone');
 
-        res.status(200).json(chats);
+        const result = chats.map(chat => {
+            const members = chat.members as unknown as PopulatedUser[];
+            const otherUser = members.find(
+                member => member._id.toString() !== userId
+            );
+            return {
+                id: chat._id,
+                name: otherUser?.name,
+                phone: otherUser?.phone,
+            }
+        })
+
+        res.status(200).json(result);
 
     } catch (error) {
         console.error(error);
