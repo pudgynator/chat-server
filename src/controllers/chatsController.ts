@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
+import Contact from "../models/Contact.js";
 
 type PopulatedUser = {
     _id: string;
@@ -20,17 +21,30 @@ export const getChats = async (req: Request, res: Response) => {
             members: userId,
         }).populate('members', 'name phone');
 
-        const result = chats.map(chat => {
-            const members = chat.members as unknown as PopulatedUser[];
-            const otherUser = members.find(
-                member => member._id.toString() !== userId
-            );
-            return {
-                id: chat._id,
-                name: otherUser?.name,
-                phone: otherUser?.phone,
-            }
-        })
+        const result = await Promise.all(
+            chats.map( async (chat) => {
+                const members = chat.members as unknown as PopulatedUser[];
+
+                const otherUser = members.find(
+                    member => member._id.toString() !== userId
+                );
+
+                if (!otherUser) {
+                    return null
+                };
+    
+                const contact = await Contact.findOne({
+                    owner: userId,
+                    contact: otherUser?._id,
+                });
+    
+                return {
+                    id: chat._id,
+                    name: contact?.name ?? otherUser?.name,
+                    phone: otherUser?.phone,
+                }
+            })
+        )
 
         res.status(200).json(result);
 

@@ -13,7 +13,7 @@ export const getContacts = async (req: Request, res: Response) => {
             owner: currentUserId,
         }).populate('contact', 'name phone lastSeen');
 
-     const result = contacts.map((item: any) => ({
+        const result = contacts.map((item: any) => ({
             id: item.contact._id,
             name: item.name,
             phone: item.contact.phone,
