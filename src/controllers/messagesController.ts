@@ -4,7 +4,7 @@ import Message from '../models/Message.js';
 
 export const getMessages = async (req: Request, res: Response) => {
     try {
-        const { chatId } = req.body;
+        const { chatId } = req.params;
         if (!chatId) {
             return res.status(400).json({ message: 'Chat ID is required'})
         };
