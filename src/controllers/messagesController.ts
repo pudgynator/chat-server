@@ -44,7 +44,7 @@ export const createMessage = async (req: Request, res: Response) => {
             text,
         });
         await message.save();
-
+        await message.populate('sender', 'name');
         return res.status(201).json(message);
     } catch (error) {
         console.error(error);
