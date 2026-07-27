@@ -44,6 +44,13 @@ export const createMessage = async (req: Request, res: Response) => {
             text,
         });
         await message.save();
+
+        await Chat.findByIdAndUpdate(chatId, {
+            lastMessage: text,
+            lastMessageSender: senderId,
+            updatedAt: new Date(),
+        })
+
         await message.populate('sender', 'name');
         return res.status(201).json(message);
     } catch (error) {

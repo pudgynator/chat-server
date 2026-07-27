@@ -17,9 +17,9 @@ export const getChats = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
-        const chats = await Chat.find({
-            members: userId,
-        }).populate('members', 'name phone');
+        const chats = await Chat.find({members: userId })
+                .sort({ updatedAt: -1})
+                .populate('members', 'name phone');
 
         const result = await Promise.all(
             chats.map( async (chat) => {
@@ -42,12 +42,16 @@ export const getChats = async (req: Request, res: Response) => {
                     id: chat._id,
                     name: contact?.name ?? otherUser?.name,
                     phone: otherUser?.phone,
+                    lastMessage: (chat as any).lastMessage ?? '',
+                    lastMessageSender: (chat as any).lastMessageSender ?? '',
+                    updatedAt: (chat as any).updatedAt,
+                    members: chat.members,
                 }
             })
         )
-
-        res.status(200).json(result);
-
+        const filteredResult = result.filter(Boolean);
+        
+        res.status(200).json(filteredResult);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Server error' });
