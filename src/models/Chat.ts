@@ -14,7 +14,7 @@ const chatSchema = new Schema({
     lastMessageSender: {
         type: Schema.Types.ObjectId,
         ref: 'User',
-    }
+    },
     },
     {
         timestamps: true,

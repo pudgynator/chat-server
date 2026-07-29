@@ -7,6 +7,7 @@ type PopulatedUser = {
     _id: string;
     name: string;
     phone: string;
+    lastSeen: string | Date;
 };
 
 export const getChats = async (req: Request, res: Response) => {
@@ -19,7 +20,7 @@ export const getChats = async (req: Request, res: Response) => {
 
         const chats = await Chat.find({members: userId })
                 .sort({ updatedAt: -1})
-                .populate('members', 'name phone');
+                .populate('members', 'name phone lastSeen');
 
         const result = await Promise.all(
             chats.map( async (chat) => {
@@ -43,14 +44,15 @@ export const getChats = async (req: Request, res: Response) => {
                     name: contact?.name ?? otherUser?.name,
                     phone: otherUser?.phone,
                     lastMessage: (chat as any).lastMessage ?? '',
+                    lastSeen: otherUser.lastSeen ?? null,
                     lastMessageSender: (chat as any).lastMessageSender ?? '',
                     updatedAt: (chat as any).updatedAt,
                     members: chat.members,
                 }
             })
         )
-        const filteredResult = result.filter(Boolean);
         
+        const filteredResult = result.filter(Boolean);
         res.status(200).json(filteredResult);
     } catch (error) {
         console.error(error);
