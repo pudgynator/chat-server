@@ -5,9 +5,23 @@ import Message from '../models/Message.js';
 export const getMessages = async (req: Request, res: Response) => {
     try {
         const { chatId } = req.params;
+        const userId = req.user?.userId;
         if (!chatId) {
             return res.status(400).json({ message: 'Chat ID is required'})
         };
+        
+        if (userId) {
+            await Message.updateMany(
+                { 
+                    chat: chatId,
+                    sender: { $ne: userId },
+                    read: false,
+                },
+                {
+                    $set: { read: true}
+                }
+            )
+        }
         const messages = await Message.find({
             chat: chatId,
         }).sort({
@@ -53,6 +67,35 @@ export const createMessage = async (req: Request, res: Response) => {
 
         await message.populate('sender', 'name');
         return res.status(201).json(message);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error'});
+    }
+}
+
+export const markRead =  async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized'})
+        };
+
+        const { chatId } = req.params;
+        if (!chatId) {
+            return res.status(400).json({ message: 'Chat ID is required'})
+        };
+
+        await Message.updateMany(
+            { 
+                chat: chatId,
+                sender: { $ne: userId },
+                read: false,
+            },
+            {
+                $set: { read: true}
+            }
+        )
+        return res.status(200).json({ message: 'Messages marked as read' });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error'});

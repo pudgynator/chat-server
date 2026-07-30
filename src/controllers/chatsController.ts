@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 import Contact from "../models/Contact.js";
+import Message from "../models/Message.js";
 
 type PopulatedUser = {
     _id: string;
@@ -22,6 +23,7 @@ export const getChats = async (req: Request, res: Response) => {
                 .sort({ updatedAt: -1})
                 .populate('members', 'name phone lastSeen');
 
+
         const result = await Promise.all(
             chats.map( async (chat) => {
                 const members = chat.members as unknown as PopulatedUser[];
@@ -38,6 +40,12 @@ export const getChats = async (req: Request, res: Response) => {
                     owner: userId,
                     contact: otherUser?._id,
                 });
+
+                const unreadCount = await Message.countDocuments({
+                    chat: chat._id,
+                    sender: { $ne: userId },
+                    read: false,
+                });
     
                 return {
                     id: chat._id,
@@ -48,10 +56,11 @@ export const getChats = async (req: Request, res: Response) => {
                     lastMessageSender: (chat as any).lastMessageSender ?? '',
                     updatedAt: (chat as any).updatedAt,
                     members: chat.members,
+                    unreadCount,
                 }
             })
         )
-        
+
         const filteredResult = result.filter(Boolean);
         res.status(200).json(filteredResult);
     } catch (error) {
