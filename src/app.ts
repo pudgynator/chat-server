@@ -14,7 +14,7 @@ app.use(cors(corsOptions))
 
 app.use(router);
 
-app.get('/api', (req, res) => {
+app.get('/api', (_req, res) => {
     res.send('hello');
 });
 
