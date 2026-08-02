@@ -3,6 +3,13 @@
 A full-stack real-time chat application inspired by modern messaging platforms. The project is built with React, Node.js, Express, MongoDB, and TypeScript.
 
 REST API for the React Chat application.
+
+---
+
+# Link 
+
+https://chat-bot-pudge.vercel.app/
+
 ---
 
 ## Tech Stack
@@ -22,7 +29,7 @@ REST API for the React Chat application.
 ### Clone repository
 
 ```bash
-git clone https://github.com/pudgynator/chat-server
+git clone https://github.com/pudgynator/chat-server.git
 ```
 
 ---
@@ -33,6 +40,7 @@ git clone https://github.com/pudgynator/chat-server
 - Contacts API
 - Chats API
 - JWT authorization
+- Chats & Messages Engine
 - MongoDB database
 
 ---
@@ -52,6 +60,7 @@ npm install
 PORT=3000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
+CLIENT_URL=https://chat-bot-pudge.vercel.app
 ```
 
 ## Running the Application
