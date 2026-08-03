@@ -12,12 +12,12 @@ export const loginUser = async (req: Request, res: Response) => {
 
         const user = await User.findOne({ phone });
         if(!user) {
-            return res.status(401).json({ message: 'Invalid phone or password' });
+            return res.status(401).json({ message: 'User not found or invalid password' });
         };
 
         const isMatch = await bcrypt.compare(password, user.password);
         if(!isMatch) {
-            return res.status(401).json({ message: 'Invalid phone or password' });
+            return res.status(401).json({ message: 'Invalid phone number or password' });
         }
 
         const token = jwt.sign(
