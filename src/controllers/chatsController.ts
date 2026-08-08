@@ -3,6 +3,7 @@ import Chat from "../models/Chat.js";
 import User from "../models/User.js";
 import Contact from "../models/Contact.js";
 import Message from "../models/Message.js";
+import { Types } from 'mongoose'
 
 type PopulatedUser = {
     _id: string;
@@ -18,8 +19,7 @@ export const getChats = async (req: Request, res: Response) => {
         if (!userId) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
-
-        const chats = await Chat.find({members: userId })
+        const chats = await Chat.find({members: new Types.ObjectId(userId) } as any)
                 .sort({ updatedAt: -1})
                 .populate('members', 'name phone lastSeen');
 
@@ -117,3 +117,52 @@ export const createChat = async (req: Request, res: Response) => {
         return res.status(500).json({ message: 'Server error' });
     }
 };
+
+export const createGroup = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user?.userId;
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        const currentUserId = new Types.ObjectId(userId);
+        const { name, members } = req.body;
+
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: 'Group name is required' });
+        };
+
+        if (!members || !Array.isArray(members)) {
+            return res.status(400).json({ message: 'Members array is required' });
+        }
+
+        const memberObjectIds = members.map((id: string) => new Types.ObjectId(id));
+
+        const uniqueStringIds = Array.from(
+            new Set([
+                ...memberObjectIds.map((id: Types.ObjectId) => id.toString()), 
+                currentUserId.toString()
+            ])
+        );
+
+        const allMembers: Types.ObjectId[] = uniqueStringIds.map(
+            (id: string) => new Types.ObjectId(id)
+        );
+
+        const newGroup = await Chat.create({
+            isGroup: true,
+            name: name.trim(),
+            admin: currentUserId as any,
+            members: allMembers as any,
+        });
+
+        const populatedGroup = await Chat.findById(newGroup._id)
+            .populate('members', 'name avatar lastSeen')
+            .populate('admin', 'name avatar');
+            
+        return res.status(201).json(populatedGroup);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Failed to create group chat'});
+    }
+}
