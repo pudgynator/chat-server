@@ -20,13 +20,35 @@ export const getChats = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Unauthorized' });
         }
         const chats = await Chat.find({members: new Types.ObjectId(userId) } as any)
-                .sort({ updatedAt: -1})
-                .populate('members', 'name phone lastSeen');
+            .populate('members', 'name phone lastSeen')
+            .populate('admin', 'name')
+            .sort({ updatedAt: -1})
 
 
         const result = await Promise.all(
             chats.map( async (chat) => {
                 const members = chat.members as unknown as PopulatedUser[];
+
+                const unreadCount = await Message.countDocuments({
+                    chat: chat._id,
+                    sender: { $ne: userId },
+                    read: false,
+                });
+
+                if (chat.isGroup) {
+                    return {
+                        id: chat._id,
+                        isGroup: true,
+                        name: chat.name || 'Group',
+                        avatar: chat.avatar || '',
+                        admin: chat.admin,
+                        members: chat.members,
+                        lastMessage: (chat as any).lastMessage ?? '',
+                        lastMessageSender: (chat as any).lastMessageSender ?? '',
+                        updatedAt: (chat as any).updatedAt,
+                        unreadCount,
+                    };
+                }
 
                 const otherUser = members.find(
                     member => member._id.toString() !== userId
@@ -41,14 +63,9 @@ export const getChats = async (req: Request, res: Response) => {
                     contact: otherUser?._id,
                 });
 
-                const unreadCount = await Message.countDocuments({
-                    chat: chat._id,
-                    sender: { $ne: userId },
-                    read: false,
-                });
-    
                 return {
                     id: chat._id,
+                    isGroup: false,
                     name: contact?.name ?? otherUser?.name,
                     phone: otherUser?.phone,
                     lastMessage: (chat as any).lastMessage ?? '',
@@ -159,7 +176,7 @@ export const createGroup = async (req: Request, res: Response) => {
         const populatedGroup = await Chat.findById(newGroup._id)
             .populate('members', 'name avatar lastSeen')
             .populate('admin', 'name avatar');
-            
+
         return res.status(201).json(populatedGroup);
     } catch (error) {
         console.error(error);
