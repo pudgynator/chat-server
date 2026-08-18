@@ -183,3 +183,35 @@ export const createGroup = async (req: Request, res: Response) => {
         return res.status(500).json({ message: 'Failed to create group chat'});
     }
 }
+
+export const editGroupName = async (req: Request, res: Response) => {
+    try {
+        const { chatId } = req.params;
+        const { name } = req.body;
+        const userId = (req as any).user?.userId;
+        if (!userId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        if (!name || !name.trim()) {
+            return res.status(400).json({ message: 'Group name is required' });
+        };
+
+        const chat = await Chat.findById(chatId);
+        if (!chat) {
+            return res.status(404).json({ message: 'Chat not found'})
+        }
+
+        chat.name = name.trim();
+        await chat.save();
+
+        return res.status(200).json({
+            message: 'Group name updated',
+            name: chat.name,
+            chat
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Failed to edit group name'});
+    }
+}
