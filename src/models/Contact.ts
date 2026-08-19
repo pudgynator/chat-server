@@ -1,6 +1,15 @@
-import { Schema, model} from 'mongoose';
+import { Schema, model, Document, Types} from 'mongoose';
 
-const contactSchema = new Schema({
+export interface IContact extends Document {
+    owner: Types.ObjectId | string;
+    contact: Types.ObjectId | string;
+    name: string;
+    phone: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+const contactSchema = new Schema<IContact>({
     owner: {
         type: Schema.Types.ObjectId,
         ref: 'User',
@@ -14,7 +23,13 @@ const contactSchema = new Schema({
     name: {
         type: String,
         required: true,
-    }
+        trim: true,
+    },
+    phone: {
+        type: String,
+        required: true,
+        trim: true,
+    },
 },
     {
         timestamps: true,
