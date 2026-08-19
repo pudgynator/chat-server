@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import User from '../models/User.js';
 import Contact from '../models/Contact.js';
+import { Types } from 'mongoose';
 
 export const getContacts = async (req: Request, res: Response) => {
     try {
@@ -69,5 +70,55 @@ export const createContact = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error'});
+    }
+}
+
+export const updateOrCreateContact = async (req: Request, res: Response) => {
+    try {
+        const currentUserId = req.user?.userId;
+        const { targetUserId } = req.params;
+        const { name, phone } = req.body;  
+
+        if (!currentUserId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        if (!name || !name.trim()) {
+            return res.status(400).json({message: 'Name are required'});
+        }
+
+        if (!currentUserId) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
+
+        let contactPhone = phone?.trim();
+        if (!contactPhone) {
+            const targetUser = await User.findById(targetUserId).select('phone');
+            contactPhone = targetUser?.phone || null;
+        }
+
+        const contact = await Contact.findOneAndUpdate(
+            {
+                owner: new Types.ObjectId(currentUserId),
+                contact: new Types.ObjectId(String(targetUserId)),
+            },
+            {
+                name: name.trim(),
+                phone: contactPhone,
+            },
+            {
+                new: true,
+                upsert: true,
+                setDefaultsOnInsert: true
+            }
+        ).populate("contact", "name phone lastSeen");
+
+        return res.status(200).json({
+            message: "Cоntact saved",
+            contact,
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Error saving contact' });
     }
 }
