@@ -39,6 +39,7 @@ git clone https://github.com/pudgynator/chat-server.git
 - Authentication
 - Contacts API
 - Chats API
+- Group Chats
 - JWT authorization
 - Chats & Messages Engine
 - MongoDB database
